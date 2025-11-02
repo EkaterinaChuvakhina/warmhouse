@@ -1,0 +1,30 @@
+    @startuml
+!include templates/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+Container(notification, "Notification Service", "Go", "Управление уведомлениями")
+Container(auth, "Auth Service", "Go", "Аутентификация и авторизация пользователей")
+Container(telemetry, "Telemetry Service", "Go", "Сбор и обработка телеметрии")
+Container(automation, "Automation Service", "Go", "Управление сценариями")
+Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие")
+Container(device_management, "Device Management Service", "Go", "Регистрация и управление устройствами")
+
+
+Container_Boundary(api_gateway, "API Gateway") {
+  Component(request_router, "Request Router", "Go", "Маршрутизация HTTP-запросов")
+  Component(rate_limiter, "Rate Limiter", "Go", "Контроль количества запросов")
+  Component(metrics_collector, "Metrics Collector", "Go", "Сбор метрик для мониторинга")
+}
+
+Rel(user, rate_limiter, Пользовательский запрос , "HTTPS")
+Rel(rate_limiter, request_router, "Перенаправление на маршрутизатор")
+Rel(request_router, auth, "Аутентификация и авторизация пользователей", "")
+Rel(request_router, notification, "Настройка уведомлений", "HTTPS")
+Rel(request_router, telemetry, "Запрос телеметрии", "HTTPS")
+Rel(request_router, automation, "Создание/управление сценариями", "HTTPS")
+Rel(request_router, device_management, "Регистрация и управление устройствами", "HTTPS")
+Rel(request_router, metrics_collector, "Сбор метрик")
+Rel(metrics_collector, message_broker, "Публикация логов/метрик")
+@enduml

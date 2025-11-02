@@ -1,0 +1,34 @@
+@startuml
+!include templates/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+
+Container(api_gateway, "API Gateway", "Go", "Маршрутизация запросов")
+Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие")
+ContainerDb(notification_database, "Notification DB", "PostgreSQL", "Хранит настройки уведомлений")
+System_Ext(push_service, "Push Service", "Firebase Cloud Messaging", "Отправка push-уведомлений")
+System_Ext(email_service, "Email Service", "SendGrid", "Отправка email-уведомлений")
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+
+Container_Boundary(notification, "Notification Service") {
+  Component(settings_controller, "Notification API", "Go", "Обработка запросов на настройку уведомлений")
+  Component(event_processor, "Event Processor", "Go", "Обработка событий из Message Broker")
+  Component(notification_sender, "Notification Sender", "Go", "Отправка уведомлений через внешние сервисы")
+  Component(database_manager, "Notification Repository", "Go", "Управление данными в Notification DB")
+}
+
+
+Rel(user, api_gateway, "Настройка уведомлений", "HTTPS")
+Rel(api_gateway, settings_controller, "Отправка запроса в сервис", "HTTPS")
+Rel(settings_controller, database_manager, "Сохранение/получение настроек")
+Rel(database_manager, notification_database, "Сохранение/получение данных")
+Rel(event_processor, notification_sender, "Инициирование отправки уведомлений")
+Rel(notification_sender, push_service, "Отправка push-уведомлений", "HTTPS")
+Rel(notification_sender, email_service, "Отправка email-уведомлений", "HTTPS")
+Rel(push_service, user, "Доставка push-уведомлений")
+Rel(email_service, user, "Доставка email-уведомлений")
+
+
+Rel(message_broker, event_processor, "Отправка событий (телеметрия, сценарии, пользователи)")
+@enduml

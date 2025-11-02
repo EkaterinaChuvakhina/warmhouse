@@ -1,0 +1,27 @@
+```plantuml
+@startuml
+!include templates/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+Container(api_gateway, "API Gateway", "Go", "Маршрутизация запросов")
+Container(device_gateway, "Device Gateway", "Go", "Шлюз для локальных хабов")
+Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие")
+ContainerDb(telemetry_database, "Telemetry DB", "InfluxDB", "Хранит телеметрию")
+
+Container_Boundary(telemetry, "Telemetry Service") {
+  Component(telemetry_controller, "Telemetry Controller", "Go", "Обработка запросов на получение телеметрии")
+  Component(telemetry_processor, "Telemetry Processor", "Go", "ETL для данных телеметрии")
+  Component(database_manager, "Telemetry Repository", "Go", "Управление данными в Telemetry DB")
+}
+
+Rel(user, api_gateway, "Запрос телеметрии", "HTTPS")
+Rel(api_gateway, telemetry_controller, "Передача запросов в сервис", "HTTPS")
+Rel(telemetry_controller, database_manager, "Получение данных телеметрии")
+Rel(database_manager, telemetry_database, "Сохранение/получение данных", "InfluxDB API")
+Rel(telemetry_processor, database_manager, "Сохранение обработанных данных")
+
+Rel(message_broker, telemetry_processor, "Получение телеметрии")
+Rel(device_gateway, message_broker, "Отправка данных")
+@enduml

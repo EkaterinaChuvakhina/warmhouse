@@ -1,0 +1,18 @@
+@startuml
+!include templates/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(User, "User", "Владелец дома")
+Person(Support, "Support", "Сотрудник поддержки")
+
+System(WarmhouseSystem, "Warmhouse System", "Система для управления отоплением и предоставления данных о температуре")
+System_Ext(Sensors, "Sensors", "Оборудование в доме для контроля температуры")
+
+User --> WarmhouseSystem : Управляет отоплением и просматривает температуру
+WarmhouseSystem --> Sensors : Запрашивает данные и отправляет команды
+Support --> Sensors : Устанавливает  оборудование
+Support --> WarmhouseSystem : Регистрирует датчики в системе
+
+
+@enduml
