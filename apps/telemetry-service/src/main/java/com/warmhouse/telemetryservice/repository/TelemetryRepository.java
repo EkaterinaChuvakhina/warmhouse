@@ -58,7 +58,7 @@ public class TelemetryRepository {
                 data.setDeviceId(UUID.fromString(record.getValueByKey("device_id").toString()));
                 data.setModuleId(UUID.fromString(record.getValueByKey("module_id").toString()));
                 data.setType(record.getValueByKey("type").toString());
-                data.setValue((Double) record.getValueByKey("value"));
+                data.setValue((Double) record.getValueByKey("_value"));
                 data.setTimestamp(record.getTime());
                 results.add(data);
             }
