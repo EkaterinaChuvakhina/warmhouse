@@ -23,7 +23,7 @@ public class TemperatureController {
     public TemperatureDto get(@RequestParam("location") String location) {
         log.info("Got request for location %s".formatted(location));
         return TemperatureDto.builder()
-                .value(BigDecimal.valueOf(random.nextDouble(-50.0, 150.0)).setScale(2, RoundingMode.DOWN))
+                .value(BigDecimal.valueOf(random.nextDouble(10, 35)).setScale(1, RoundingMode.DOWN))
                 .unit("temperature")
                 .timestamp(OffsetDateTime.now())
                 .location(location)
