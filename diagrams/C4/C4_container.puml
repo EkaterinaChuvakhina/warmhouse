@@ -1,0 +1,64 @@
+@startuml
+!include templates/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+System_Boundary(store, "Warmhouse System") {
+  Container(web_app, "Web App", "React", "Интерфейс для пользователя через браузер")
+  Container(mobile_app, "Mobile App", "React Native", "Интерфейс для пользователя с мобильного приложения")
+  Container(api_gateway, "API Gateway", "Go", "Маршрутизация запросов")
+  Container(auth, "Auth Service", "Go", "Аутентификация и авторизация пользователей")
+  Container(account_management, "Account Management Service", "Go", "Управление аккаунтами пользователей (регистрация, профиль)")
+  Container(device_management, "Device Management Service", "Go", "Регистрация и управление устройствами")
+  Container(telemetry, "Telemetry Service", "Go", "Сбор и обработка телеметрии")
+  Container(notification, "Notification Service", "Go", "Отправка уведомлений (push, email)")
+  Container(scenario, "Scenario Service", "Go", "Управление пользовательскими сценариями")
+  Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие между сервисами и устройствами")
+  Container(device_gateway, "Device Gateway", "Go", "Шлюз для безопасного подключения локальных хабов")
+}
+
+ContainerDb(auth_database, "Auth DB", "PostgreSQL", "Хранит данные пользователей")
+ContainerDb(account_database, "Account DB", "PostgreSQL", "Хранит профили и историю аккаунтов")
+ContainerDb(device_database, "Device DB", "PostgreSQL", "Хранит конфигурации устройств")
+ContainerDb(scenario_database, "Scenario DB", "PostgreSQL", "Хранит сценарии автоматизации")
+ContainerDb(monitor_database, "Telemetry DB", "InfluxDB", "Хранит телеметрию устройств")
+ContainerDb(notification_database, "Notification DB", "PostgreSQL", "Хранит настройки уведомлений")
+
+System_Ext(devices, "Smart Devices", "Zigbee", "Устройства умного дома (датчики, свет, ворота)")
+System_Ext(push_service, "Push Service", "Firebase Cloud Messaging", "Отправка push-уведомлений")
+System_Ext(email_service, "Email Service", "SendGrid", "Отправка email-уведомлений")
+System_Ext(local_hub, "Local Hub", "Generic Hub", "Локальный шлюз для устройств")
+
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+
+Rel(user, web_app, "Мониторинг/управление", "HTTPS")
+Rel(user, mobile_app, "Мониторинг/управление", "HTTPS")
+Rel(web_app, api_gateway, "Запросы к сервисам", "HTTPS")
+Rel(mobile_app, api_gateway, "Запросы к сервисам", "HTTPS")
+Rel(api_gateway, auth, "Аутентификация и авторизация пользователей", "HTTPS")
+Rel(api_gateway, account_management, "Управление аккаунтом (регистрация, профиль)", "HTTPS")
+Rel(api_gateway, device_management, "Регистрация/управление устройствами", "HTTPS")
+Rel(api_gateway, telemetry, "Запрос телеметрии", "HTTPS")
+Rel(api_gateway, notification, "Настройка уведомлений", "HTTPS")
+Rel(api_gateway, scenario, "Создание/управление сценариями", "HTTPS")
+
+Rel(device_management, message_broker, "Команды устройствам", "")
+Rel(auth, message_broker, "Публикация событий о пользователе", "")
+Rel(account_management, message_broker, "Публикация событий об аккаунте", "")
+Rel(telemetry, message_broker, "Публикация событий телеметрии", "")
+Rel(device_gateway, message_broker, "Публикация/подписка на сообщения", "")
+Rel(devices, local_hub, "Локальное взаимодействие", "Zigbee")
+Rel(message_broker, notification, "Получение событий (телеметрия, сценарии, данные пользователя)", "")
+Rel(scenario, message_broker, "Публикация событий при выполнении сценария")
+
+Rel(local_hub, device_gateway, "Передача телеметрии/команд", "MQTT/TLS")
+Rel(auth, auth_database, "Хранение данных")
+Rel(account_management, account_database, "Хранение профилей и истории")
+Rel(device_management, device_database, "Хранение конфигураций")
+Rel(telemetry, monitor_database, "Хранение телеметрии", "InfluxDB API")
+Rel(scenario, scenario_database, "Хранение сценариев")
+Rel(notification, notification_database, "Хранение настроек")
+Rel(notification, push_service, "Отправка push-уведомлений", "HTTPS")
+Rel(notification, email_service, "Отправка email-уведомлений", "HTTPS")
+
+@enduml

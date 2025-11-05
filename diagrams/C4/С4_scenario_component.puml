@@ -1,0 +1,33 @@
+@startuml
+!include templates/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+
+Container(api_gateway, "API Gateway", "Go", "Маршрутизация запросов")
+Container(device_gateway, "Device Gateway", "Go", "Шлюз для локальных хабов")
+Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие")
+ContainerDb(scenario_database, "Scenario DB", "PostgreSQL", "Хранит сценарии")
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+Container(device_management, "Device Management Service", "Go", "Регистрация и управление устройствами")
+
+Container_Boundary(scenario, "Scenario Service") {
+  Component(scenario_controller, "Scenario API", "Go", "Обработка запросов на управление сценариями")
+  Component(event_processor, "Event Processor", "Go", "Обработка событий из Message Broker")
+  Component(action_executor, "Action Executor", "Go", "Выполнение действий сценариев")
+  Component(database_manager, "Scenario Repository", "Go", "Управление данными в Scenario DB")
+  Component(event_publisher, "Event Publisher", "Go", "Публикация событий в Message Broker")
+}
+
+Rel(user, api_gateway, "Создание/управление сценариями", "HTTPS")
+Rel(api_gateway, scenario_controller, "Перенаправление запроса в сервис", "HTTPS")
+Rel(scenario_controller, database_manager, "Сохранение/получение сценариев")
+Rel(database_manager, scenario_database, "Сохранение/получение данных")
+Rel(event_processor, action_executor, "Запуск выполения сценария")
+Rel(action_executor, event_publisher, "Формирование событий об необходимости изменения состояния устройств")
+Rel(message_broker, event_processor, "Получение событий")
+Rel(event_publisher, message_broker, "Публикация событий об необходимости изменения состояния устройств" )
+Rel(message_broker, device_management, "Получение/Отправка событий об изменение состояния устройств")
+Rel(message_broker, device_gateway, "Получение событий/изменение состояния устройств")
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+!include templates/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие")
+System_Ext(local_hub, "Local Hub", "Generic Hub", "Локальный шлюз для устройств")
+Container(telemetry, "Telemetry Service", "Go", "Сбор и обработка телеметрии")
+Container(automation, "Automation Service", "Go", "Управление сценариями")
+Container(sensors, "Device Management Service", "Go", "Регистрация и управление устройствами")
+
+Container_Boundary(device_gateway, "Device Gateway") {
+  Component(device_comunication_layer, "Device Communication Layer", "Go", "Обработка сообщений MQTT/TLS от Local Hub")
+  Component(message_router, "Message Router", "Go", "Перенаправление сообщений в Message Broker")
+  Component(command_processor, "Command Processor", "Go", "Обработка команд для устройств")
+}
+
+Rel(device_comunication_layer, message_router, "Передача валидных сообщений")
+Rel(command_processor, device_comunication_layer, "Отправка команд в Local Hub")
+
+Rel(local_hub, device_comunication_layer, "Передача телеметрии/команд", "MQTT/TLS")
+Rel(device_comunication_layer, local_hub, "Отправка команд", "MQTT/TLS")
+Rel(message_router, message_broker, "Публикация телеметрии/команд")
+Rel(message_broker, command_processor, "Получение команд от других сервисов")
+Rel(message_broker, telemetry, "Передача телеметрии")
+Rel(message_broker, automation, "Передача событий для сценариев")
+Rel(message_broker, sensors, "Передача команд от Device Management")
+
+@enduml

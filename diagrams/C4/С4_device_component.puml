@@ -1,0 +1,39 @@
+@startuml
+!include templates/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Container(api_gateway, "API Gateway", "Go", "Маршрутизация запросов")
+Container(device_gateway, "Device Gateway", "Go", "Шлюз для безопасного подключения локальных хабов")
+Container(message_broker, "Message Broker", "Kafka", "Асинхронное взаимодействие")
+ContainerDb(sensors_database, "Device DB", "PostgreSQL", "Хранит конфигурации устройств")
+Container(telemetry, "Telemetry Service", "Go", "Сбор и обработка телеметрии")
+Container(scenario, "Scenario Service", "Go", "Управление сценариями")
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+
+
+Container_Boundary(sensors, "Device Management Service") {
+  Component(device_controller, "Device API", "Go", "Обработка запросов на регистрацию/управление устройствами")
+  Component(device_manager, "Device Manager", "Go", "Управление данными/конфигурацией устройств")
+  Component(command_handler, "Command Handler", "Go", "Обработка команд для устройств")
+  Component(event_processor, "Event Processor", "Go", "Обработка событий на изменение статуса/параметров устройства")
+  Component(command_publisher, "Command Publisher", "Go", "Публикация команд в Message Broker")
+  Component(database_manager, "Database Repository", "Go", "Управление данными в Device DB")
+}
+
+Rel(user, api_gateway, "Регистрация/управление устройствами", "HTTPS")
+Rel(api_gateway, device_controller, "Передача запроса в сервис", "HTTPS")
+Rel(device_controller, device_manager, "Обработка операций с устройствами")
+Rel(device_manager, database_manager, "Сохранение/получение конфигураций")
+Rel(database_manager, sensors_database, "Сохранение/получение данных")
+Rel(device_manager, command_handler, "Передача команд для обработки")
+Rel(command_handler, command_publisher, "Публикация команд")
+Rel(event_processor, database_manager, "Обновление состояния в базе")
+Rel(event_processor, command_handler, "Передача команд для обработки")
+
+Rel(command_publisher, message_broker, "Публикация команд")
+Rel(message_broker, event_processor, "Получение изменений от сценариев")
+Rel(message_broker, device_gateway, "Передача команд устройствам")
+Rel(message_broker, telemetry, "Передача телеметрии для мониторинга")
+Rel(message_broker, scenario, "Передача изменений состояния для сценариев")
+@enduml

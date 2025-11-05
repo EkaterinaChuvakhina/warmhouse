@@ -1,0 +1,1855 @@
+openapi: 3.0.3
+info:
+  title: Warmhouse System API
+  description: API for smart home device management system
+  version: 1.0.0
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    # Auth Schemas
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: securepass123
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expires_in:
+          type: integer
+          example: 3600
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    # User Schemas (from ER: USER)
+    User:
+      type: object
+      required:
+        - user_id
+        - email
+        - name
+        - created_at
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:00:00Z
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: newuser@example.com
+        name:
+          type: string
+          example: New User
+        password:
+          type: string
+          format: password
+          example: securepass123
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Name
+        email:
+          type: string
+          format: email
+          example: updated@example.com
+    House:
+      type: object
+      required:
+        - house_id
+        - name
+        - address
+        - created_at
+      properties:
+        house_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        name:
+          type: string
+          example: My Home
+        address:
+          type: string
+          example: 123 Main St, City
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:00:00Z
+    CreateHouseRequest:
+      type: object
+      required:
+        - name
+        - address
+      properties:
+        name:
+          type: string
+          example: My Home
+        address:
+          type: string
+          example: 123 Main St, City
+    UserHouseRole:
+      type: object
+      required:
+        - user_id
+        - house_id
+        - role
+        - created_at
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        house_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        role:
+          type: string
+          enum: [owner, member, guest]
+          example: owner
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:00:00Z
+    InviteUserRequest:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: invitee@example.com
+        role:
+          type: string
+          enum: [member, guest]
+          example: member
+    DeviceType:
+      type: object
+      required:
+        - type_id
+        - name
+        - description
+      properties:
+        type_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174002
+        name:
+          type: string
+          example: Light Bulb
+        description:
+          type: string
+          example: Smart LED light
+    Device:
+      type: object
+      required:
+        - device_id
+        - house_id
+        - type_id
+        - serial_number
+        - status
+        - created_at
+      properties:
+        device_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174003
+        house_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        type_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174002
+        serial_number:
+          type: string
+          example: SN12345
+        name:
+          type: string
+          example: Living Room Light
+        location:
+          type: string
+          example: Living Room
+        status:
+          type: string
+          enum: [online, offline, error]
+          example: online
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:00:00Z
+    Module:
+      type: object
+      required:
+        - module_id
+        - device_id
+        - name
+        - type
+        - status
+      properties:
+        module_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174004
+        device_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174003
+        name:
+          type: string
+          example: Color Control
+        type:
+          type: string
+          enum: [light, sensor, switch]
+          example: light
+        status:
+          type: string
+          enum: [active, inactive]
+          example: active
+    DeviceWithModules:
+      type: object
+      required:
+        - device
+        - modules
+      properties:
+        device:
+          $ref: '#/components/schemas/Device'
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Module'
+    UpdateDeviceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Device Name
+        location:
+          type: string
+          example: Living Room
+    CommandRequest:
+      type: object
+      required:
+        - command
+      properties:
+        command:
+          type: string
+          example: "turn_on"
+        params:
+          type: object
+          additionalProperties: true
+          example: {brightness: 50, color: "warm"}
+    TelemetryData:
+      type: object
+      required:
+        - telemetry_id
+        - device_id
+        - module_id
+        - type
+        - value
+        - timestamp
+      properties:
+        telemetry_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174005
+        device_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174003
+        module_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174004
+        type:
+          type: string
+          example: temperature
+        value:
+          type: number
+          format: float
+          example: 23.5
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:05:00Z
+    TelemetryList:
+      type: array
+      items:
+        $ref: '#/components/schemas/TelemetryData'
+    Notification:
+      type: object
+      required:
+        - notification_id
+        - user_id
+        - type
+        - destination
+        - trigger
+        - created_at
+        - read
+      properties:
+        notification_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174006
+        user_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type:
+          type: string
+          enum: [push, email]
+          example: push
+        destination:
+          type: string
+          example: user@example.com
+        trigger:
+          type: string
+          example: Device offline
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:10:00Z
+        read:
+          type: boolean
+          example: false
+    NotificationList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Notification'
+    NotificationSettings:
+      type: object
+      properties:
+        devices:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: [123e4567-e89b-12d3-a456-426614174003]
+        time_window:
+          type: object
+          properties:
+            start:
+              type: string
+              format: time
+              example: "08:00"
+            end:
+              type: string
+              format: time
+              example: "22:00"
+        types:
+          type: array
+          items:
+            type: string
+            enum: [alert, status, maintenance]
+          example: [alert, status]
+    UpdateNotificationRequest:
+      type: object
+      required:
+        - read
+      properties:
+        read:
+          type: boolean
+          example: true
+    Scenario:
+      type: object
+      required:
+        - scenario_id
+        - house_id
+        - name
+        - enabled
+        - created_at
+        - updated_at
+        - rules
+      properties:
+        scenario_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174007
+        house_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        name:
+          type: string
+          example: Evening Lights
+        enabled:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T10:00:00Z
+        updated_at:
+          type: string
+          format: date-time
+          example: 2025-10-25T11:00:00Z
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+    Rule:
+      type: object
+      required:
+        - id
+        - trigger_type
+        - trigger_condition
+        - action_type
+        - action_params
+        - priority
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174008
+        trigger_type:
+          type: string
+          enum: [time, event, sensor]
+          example: time
+        trigger_condition:
+          type: object
+          additionalProperties: true
+          example: {humidity: {lt: 30}}
+        action_type:
+          type: string
+          enum: [turn_on, turn_off, notify]
+          example: turn_on
+        action_params:
+          type: object
+          additionalProperties: true
+          example: {device_id: "123e4567-e89b-12d3-a456-426614174003"}
+        priority:
+          type: integer
+          example: 1
+    CreateScenarioRequest:
+      type: object
+      required:
+        - house_id
+        - name
+        - enabled
+        - rules
+      properties:
+        house_id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        name:
+          type: string
+          example: Evening Lights
+        enabled:
+          type: boolean
+          example: true
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+    UpdateScenarioRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Scenario
+        enabled:
+          type: boolean
+          example: false
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+    Error:
+      type: object
+      required:
+        - message
+        - code
+      properties:
+        message:
+          type: string
+          example: Resource not found
+        code:
+          type: string
+          example: NOT_FOUND
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              loginExample:
+                summary: Successful login
+                value:
+                  email: user@example.com
+                  password: securepass123
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                success:
+                  summary: Tokens issued
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expires_in: 3600
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  summary: Bad email or password
+                  value:
+                    message: Invalid credentials
+                    code: UNAUTHORIZED
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            examples:
+              refreshExample:
+                summary: Refresh with valid token
+                value:
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                refreshed:
+                  summary: New tokens
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expires_in: 3600
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  summary: Invalid token
+                  value:
+                    message: Invalid refresh token
+                    code: UNAUTHORIZED
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            examples:
+              logoutExample:
+                summary: Logout with refresh token
+                value:
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Successful logout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+              examples:
+                success:
+                  summary: Logout message
+                  value:
+                    message: Logged out successfully
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  summary: Invalid token
+                  value:
+                    message: Invalid token
+                    code: UNAUTHORIZED
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /users:
+    post:
+      tags:
+        - Account
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            examples:
+              createUser:
+                summary: Create user
+                value:
+                  email: newuser@example.com
+                  name: New User
+                  password: securepass123
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                created:
+                  summary: New user
+                  value:
+                    user_id: 123e4567-e89b-12d3-a456-426614174000
+                    email: newuser@example.com
+                    name: New User
+                    created_at: 2025-10-25T10:00:00Z
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                conflict:
+                  summary: Duplicate user
+                  value:
+                    message: User already exists
+                    code: CONFLICT
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    delete:
+      tags:
+        - Account
+      summary: Delete a user
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: User not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /users/{user_id}:
+    patch:
+      tags:
+        - Account
+      summary: Edit user information
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+            examples:
+              updateUser:
+                summary: Update name and email
+                value:
+                  name: Updated Name
+                  email: updated@example.com
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: User not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /houses:
+    post:
+      tags:
+        - Account
+      summary: Create a house for user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHouseRequest'
+            examples:
+              createHouse:
+                summary: Create house
+                value:
+                  name: My Home
+                  address: 123 Main St, City
+      responses:
+        '201':
+          description: House created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/House'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    delete:
+      tags:
+        - Account
+      summary: Delete a house
+      parameters:
+        - name: house_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174001
+      responses:
+        '204':
+          description: House deleted
+        '404':
+          description: House not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: House not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /houses/{house_id}/users:
+    get:
+      tags:
+        - Account
+      summary: List users in a house
+      parameters:
+        - name: house_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174001
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserHouseRole'
+        '404':
+          description: House not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: House not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /users/{user_id}/houses:
+    get:
+      tags:
+        - Account
+      summary: List houses for a user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: List of houses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/House'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: User not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /houses/{house_id}/invites:
+    post:
+      tags:
+        - Account
+      summary: Invite user to house
+      parameters:
+        - name: house_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteUserRequest'
+            examples:
+              invite:
+                summary: Invite user
+                value:
+                  email: invitee@example.com
+                  role: member
+      responses:
+        '201':
+          description: Invite sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invite sent
+              examples:
+                sent:
+                  summary: Invite message
+                  value:
+                    message: Invite sent
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '404':
+          description: House not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: House not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /devices:
+    get:
+      tags:
+        - Devices
+      summary: Get list of user's devices
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /devices/{device_id}:
+    get:
+      tags:
+        - Devices
+      summary: View device and its modules
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174003
+      responses:
+        '200':
+          description: Device with modules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceWithModules'
+              examples:
+                deviceView:
+                  summary: Device details
+                  value:
+                    device:
+                      device_id: 123e4567-e89b-12d3-a456-426614174003
+                      house_id: 123e4567-e89b-12d3-a456-426614174001
+                      type_id: 123e4567-e89b-12d3-a456-426614174002
+                      serial_number: SN12345
+                      name: Living Room Light
+                      location: Living Room
+                      status: online
+                      created_at: 2025-10-25T10:00:00Z
+                    modules:
+                      - module_id: 123e4567-e89b-12d3-a456-426614174004
+                        device_id: 123e4567-e89b-12d3-a456-426614174003
+                        name: Color Control
+                        type: light
+                        status: active
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Device not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    patch:
+      tags:
+        - Devices
+      summary: Configure device
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeviceRequest'
+            examples:
+              configure:
+                summary: Update name and location
+                value:
+                  name: Updated Device Name
+                  location: Living Room
+      responses:
+        '200':
+          description: Device updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Device not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    delete:
+      tags:
+        - Devices
+      summary: Delete device
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174003
+      responses:
+        '204':
+          description: Device deleted
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Device not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /devices/{device_id}/commands:
+    post:
+      tags:
+        - Devices
+      summary: Send command to device
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+            examples:
+              sendCommand:
+                summary: Send turn on command with params
+                value:
+                  command: "turn_on"
+                  params:
+                    brightness: 80
+                    color: "warm"
+      responses:
+        '200':
+          description: Command sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid command
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid command
+                    code: BAD_REQUEST
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Device not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /telemetry:
+    get:
+      tags:
+        - Telemetry
+      summary: View telemetry for period with filters
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: 2025-10-25T09:00:00Z
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: 2025-10-25T11:00:00Z
+        - name: device_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174003
+        - name: module_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174004
+      responses:
+        '200':
+          description: Telemetry data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryList'
+              examples:
+                telemetry:
+                  summary: Filtered data
+                  value:
+                    - telemetry_id: 123e4567-e89b-12d3-a456-426614174005
+                      device_id: 123e4567-e89b-12d3-a456-426614174003
+                      module_id: 123e4567-e89b-12d3-a456-426614174004
+                      type: temperature
+                      value: 23.5
+                      timestamp: 2025-10-25T10:05:00Z
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid parameters
+                    code: BAD_REQUEST
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: List notifications
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationList'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    patch:
+      tags:
+        - Notifications
+      summary: Update notification settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSettings'
+            examples:
+              settings:
+                summary: Update settings
+                value:
+                  devices: [123e4567-e89b-12d3-a456-426614174003]
+                  time_window:
+                    start: "08:00"
+                    end: "22:00"
+                  types: [alert, status]
+      responses:
+        '200':
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettings'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /notifications/{notification_id}:
+    delete:
+      tags:
+        - Notifications
+      summary: Delete notification
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174006
+      responses:
+        '204':
+          description: Notification deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Notification not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    patch:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174006
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationRequest'
+            examples:
+              read:
+                summary: Mark as read
+                value:
+                  read: true
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Notification not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /scenarios:
+    post:
+      tags:
+        - Scenarios
+      summary: Create scenario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScenarioRequest'
+            examples:
+              createScenario:
+                summary: Create with rules
+                value:
+                  house_id: 123e4567-e89b-12d3-a456-426614174001
+                  name: Evening Lights
+                  enabled: true
+                  rules:
+                    - id: 123e4567-e89b-12d3-a456-426614174008
+                      trigger_type: time
+                      trigger_condition: {time: {at: "18:00"}}
+                      action_type: turn_on
+                      action_params: {device_id: "123e4567-e89b-12d3-a456-426614174003"}
+                      priority: 1
+      responses:
+        '201':
+          description: Scenario created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+  /scenarios/{scenario_id}:
+    get:
+      tags:
+        - Scenarios
+      summary: View scenario
+      parameters:
+        - name: scenario_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174007
+      responses:
+        '200':
+          description: Scenario details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+              examples:
+                viewScenario:
+                  summary: Full scenario
+                  value:
+                    scenario_id: 123e4567-e89b-12d3-a456-426614174007
+                    house_id: 123e4567-e89b-12d3-a456-426614174001
+                    name: Evening Lights
+                    enabled: true
+                    created_at: 2025-10-25T10:00:00Z
+                    updated_at: 2025-10-25T11:00:00Z
+                    rules:
+                      - id: 123e4567-e89b-12d3-a456-426614174008
+                        trigger_type: time
+                        trigger_condition: {time: {at: "18:00"}}
+                        action_type: turn_on
+                        action_params: {device_id: "123e4567-e89b-12d3-a456-426614174003"}
+                        priority: 1
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Scenario not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    patch:
+      tags:
+        - Scenarios
+      summary: Update scenario
+      parameters:
+        - name: scenario_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScenarioRequest'
+            examples:
+              updateScenario:
+                summary: Update enabled and rules
+                value:
+                  enabled: false
+                  rules:
+                    - id: 123e4567-e89b-12d3-a456-426614174008
+                      trigger_type: time
+                      trigger_condition: {time: {at: "19:00"}}
+                      action_type: turn_on
+                      action_params: {device_id: "123e4567-e89b-12d3-a456-426614174003"}
+                      priority: 1
+      responses:
+        '200':
+          description: Scenario updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequest:
+                  summary: Invalid data
+                  value:
+                    message: Invalid request data
+                    code: BAD_REQUEST
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Scenario not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR
+    delete:
+      tags:
+        - Scenarios
+      summary: Delete scenario
+      parameters:
+        - name: scenario_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426614174007
+      responses:
+        '204':
+          description: Scenario deleted
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Not found
+                  value:
+                    message: Scenario not found
+                    code: NOT_FOUND
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalError:
+                  summary: Server issue
+                  value:
+                    message: Internal server error
+                    code: INTERNAL_ERROR

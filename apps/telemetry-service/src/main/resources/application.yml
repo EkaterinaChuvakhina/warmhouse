@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: telemetry-service
+
+server:
+  port: 8083
+
+logging:
+  level:
+    com.warmhouse.telemetryservice: DEBUG  # For seeing save errors
+    org.influxdb: INFO
+
+influx:
+  url: http://localhost:8086
+  token: my-token
+  org: myorg
+  bucket: telemetry_bucket

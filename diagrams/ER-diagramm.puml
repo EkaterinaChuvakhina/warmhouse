@@ -1,0 +1,139 @@
+@startuml
+!define RECTANGLE class
+!define PK <b>PK</b>
+!define FK <b>FK</b>
+
+entity "USER" {
+  * user_id : UUID <<PK>>
+  --
+  email : VARCHAR
+  name : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity "ROLE" {
+  * role_id : UUID <<FK>>
+  --
+  name : VARCHAR
+  "description" : VARCHAR
+}
+
+entity "USER_ROLE" {
+  * user_id : UUID <<FK>>
+  * role_id : UUID <<FK>>
+}
+
+entity "ROLE_PERMISSION" {
+  * permission_id : UUID <<FK>>
+  * role_id : UUID <<FK>>
+}
+
+entity "PERMISSION" {
+  * permission_id : UUID <<PK>>
+  --
+  name : VARCHAR
+  "description" : VARCHAR
+}
+
+entity "USER_HOUSE" {
+  * user_id : UUID <<FK>>
+  * house_id : UUID <<FK>>
+  --
+  role : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity "HOUSE" {
+  * house_id : UUID <<PK>>
+  --
+  name : VARCHAR
+  address : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity "DEVICE_TYPE" {
+  * type_id : UUID <<PK>>
+  --
+  name : VARCHAR
+  description : TEXT
+}
+
+entity "DEVICE" {
+  * device_id : UUID <<PK>>
+  --
+  house_id : UUID <<FK>>
+  type_id : UUID <<FK>>
+  name : VARCHAR
+  location : VARCHAR
+  serial_number : VARCHAR
+  status : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity "MODULE" {
+  * module_id : UUID <<PK>>
+  --
+  device_id : UUID <<FK>>
+  name : VARCHAR
+  type : VARCHAR
+  status : VARCHAR
+  }
+
+entity "SCENARIO" {
+  * scenario_id : UUID <<PK>>
+  --
+  house_id : UUID
+  name : VARCHAR
+  enabled : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity "RULE" {
+    * id : uuid <<PK>>
+    --
+    scenario_id : uuid <<FK>>
+    trigger_type : enum "time/event/sensor"
+    trigger_condition : jsonb "e.g. {humidity < 30}"
+    action_type : enum "turn_on/notify"
+    action_params : jsonb "e.g. {device_id: uuid}"
+    priority : integer
+  }
+
+entity "NOTIFICATION" {
+  * notification_id : UUID <<PK>>
+  --
+  user_id : UUID
+  type : VARCHAR
+  destination : VARCHAR
+  trigger : TEXT
+  created_at : TIMESTAMP
+}
+
+entity "TELEMETRY_DATA" {
+  * telemetry_id : UUID <<PK>>
+  --
+  device_id : UUID
+  module_id : UUID
+  type : VARCHAR
+  value : FLOAT
+  timestamp : TIMESTAMP
+}
+
+USER_HOUSE ||--o{ HOUSE
+HOUSE ||--o{ DEVICE
+DEVICE_TYPE ||--o{ DEVICE
+DEVICE ||--o{ MODULE
+
+USER ||--o{ USER_HOUSE
+HOUSE ||--o{ SCENARIO
+USER ||--o{ NOTIFICATION
+SCENARIO ||--|{ RULE
+DEVICE ||--o{ TELEMETRY_DATA
+MODULE ||--o{ TELEMETRY_DATA
+ROLE_PERMISSION }o--o{ ROLE
+ROLE_PERMISSION }o--o{ PERMISSION
+USER_ROLE }o--o{ ROLE
+USER_ROLE }o--o{ USER
+
+@enduml

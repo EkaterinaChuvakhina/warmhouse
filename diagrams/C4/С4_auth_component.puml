@@ -1,0 +1,26 @@
+@startuml
+!include templates/C4_Component.puml
+
+Person(user, "User", "Пользователь, зарегистрированный в системе")
+Container(api_gateway, "API Gateway", "Go", "Маршрутизация запросов")
+Container_Boundary(auth, "Auth Service", "Go", "Аутентификация и авторизация пользователей") {
+  Component(auth_api, "Auth API", "Go", "Обработка HTTP-запросов для аутентификации и авторизации")
+  Component(auth_logic, "Auth Logic", "Go", "Бизнес-логика аутентификации и авторизации")
+  Component(keycloak_client, "Keycloak Client", "Go", "Взаимодействие с Keycloak для аутентификации и управления пользователями")
+  Component(auth_repository, "Auth Repository", "Go", "Промежуточный слой для взаимодействия с локальной базой данных")
+  Component(cache_layer, "Cache Layer", "Go/Redis", "Кэширование токенов и пользовательских данных")
+}
+
+System_Ext(keycloak, "Keycloak", "Java", "Система управления идентификацией и доступом (IAM)")
+System_Ext(db, "Auth Database", "PostgreSQL", "Хранилище дополнительных данных аутентификации")
+
+Rel(user, api_gateway, "Пользовательский запрос", "HTTPS")
+Rel(api_gateway, auth_api, "Перенаправление запроса в сервис", "HTTPS")
+Rel(auth_api, auth_logic, "Вызов бизнес-логики")
+Rel(auth_logic, keycloak_client, "Запрос аутентификации/авторизации")
+Rel(auth_logic, cache_layer, "Проверка/сохранение в кэше")
+Rel(auth_logic, auth_repository, "Запрос/сохранение данных")
+Rel(keycloak_client, keycloak, "OAuth 2.0/OpenID Connect", "HTTPS")
+Rel(auth_repository, db, "SQL", "Доступ к базе данных")
+
+@enduml
